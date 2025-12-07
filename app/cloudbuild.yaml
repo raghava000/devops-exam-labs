@@ -1,0 +1,35 @@
+steps:
+  # 1) Run tests using Python builder
+  - name: 'python'
+    id: 'Run unit tests'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        cd app
+        pip install --no-cache-dir -r requirements.txt
+        pytest -q
+
+  # 2) Build Docker image (only runs if tests passed)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker image'
+    args:
+      [
+        'build',
+        '-t',
+        'us-central1-docker.pkg.dev/coherent-server-475300-m1/devops-repo/app:$SHORT_SHA',
+        './app'
+      ]
+
+  # 3) Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Docker image'
+    args:
+      [
+        'push',
+        'us-central1-docker.pkg.dev/coherent-server-475300-m1/devops-repo/app:$SHORT_SHA'
+      ]
+
+images:
+  - 'us-central1-docker.pkg.dev/coherent-server-475300-m1/devops-repo/app:$SHORT_SHA'
+
